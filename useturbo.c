@@ -10,12 +10,14 @@ struct dimg{
 	const char* err;
 };
 
-static const char FILE_NOT_OPEN[] = "File can not be opened.";
+static const char FILE_NOT_OPEN[] = "fopen(): File can not be opened.";
+static const char UNEXPECTED_ERR[] = "decompress_img(): unexpected error";
 
 // fopen, fseek, fread, fclose
 struct dimg* decompress_img(char* path)
 {
 	struct dimg* dimg = (struct dimg*)malloc(sizeof(struct dimg));
+	dimg->err = UNEXPECTED_ERR;
 	int garbage;
 
 	FILE* file_jpeg = fopen(path, "r");
@@ -47,11 +49,13 @@ struct dimg* decompress_img(char* path)
 				buf_img,
 				dimg->width, 0, dimg->height,
 				TJPF_RGB,
-				TJFLAG_FASTDCT))
+				TJFLAG_ACCURATEDCT))
 		goto failure_decompress;
 
 	dimg->buffer = buf_img;
+	free(buf_jpeg);
 	tjDestroy(decompressor);
+	dimg->err = NULL;
 
 end:
 	return dimg;
